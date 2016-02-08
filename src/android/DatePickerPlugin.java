@@ -66,11 +66,10 @@ public class DatePickerPlugin extends CordovaPlugin {
 		Runnable runnable;
 		JsonDate jsonDate = new JsonDate().fromJson(data);
 
-	    // Retrieve Android theme
-	    JSONObject options = data.optJSONObject(0);
-	    int theme = options.optInt("androidTheme", 1);
-	    String caldendar = options.optInt("androidCalendar", "false");
-	    boolean hideCaldendar = Boolean.parseBoolean(caldendar);
+    // Retrieve Android theme
+    JSONObject options = data.optJSONObject(0);
+    int theme = options.optInt("androidTheme", 1);
+    boolean showCaldendar = options.optBoolean("androidCalendar", true);
 
 		int currentapiVersion = Build.VERSION.SDK_INT;
 
@@ -82,10 +81,10 @@ public class DatePickerPlugin extends CordovaPlugin {
 
 		if (ACTION_TIME.equalsIgnoreCase(jsonDate.action)) {
 			runnable = runnableTimeDialog(datePickerPlugin, theme, currentCtx,
-					callbackContext, jsonDate, Calendar.getInstance(TimeZone.getDefault()), hideCaldendar);
+					callbackContext, jsonDate, Calendar.getInstance(TimeZone.getDefault()));
 
 		} else {
-			runnable = runnableDatePicker(datePickerPlugin, theme, currentCtx, callbackContext, jsonDate, hideCaldendar);
+			runnable = runnableDatePicker(datePickerPlugin, theme, currentCtx, callbackContext, jsonDate, showCaldendar);
 		}
 
 		cordova.getActivity().runOnUiThread(runnable);
@@ -155,21 +154,25 @@ public class DatePickerPlugin extends CordovaPlugin {
 	private Runnable runnableDatePicker(
 			final DatePickerPlugin datePickerPlugin,
 			final int theme, final Context currentCtx,
-			final CallbackContext callbackContext, final JsonDate jsonDate, boolean hideCaldendar) {
+			final CallbackContext callbackContext, final JsonDate jsonDate, final boolean showCaldendar) {
 		return new Runnable() {
 			@Override
 			public void run() {
 				final DateSetListener dateSetListener = new DateSetListener(datePickerPlugin, theme, callbackContext, jsonDate);
 				final DatePickerDialog dateDialog = new DatePickerDialog(currentCtx, theme, dateSetListener, jsonDate.year,
 						jsonDate.month, jsonDate.day);
+
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 					prepareDialog(dateDialog, dateSetListener, callbackContext, currentCtx, jsonDate);
 				}
 				else {
 					prepareDialogPreHoneycomb(dateDialog, callbackContext, currentCtx, jsonDate);
 				}
-				Log.d(pluginName, "DatePicker called with hideCaldendar - " + hideCaldendar);
-				if(hideCaldendar){
+
+				Log.d(pluginName, "DatePicker called with showCaldendar - " + showCaldendar);
+
+
+				if(!showCaldendar){
 					dateDialog.getDatePicker().setCalendarViewShown(false);
 					dateDialog.getDatePicker().setSpinnersShown(true);
 				}
